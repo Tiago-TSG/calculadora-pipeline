@@ -96,7 +96,35 @@ jobs:
           assert calcular_imposto(200, 10) == 20.0
           print('DAST smoke passou — aplicação operacional no contêiner')
           "
+        # OBS: o dast-smoke atual faz asserts dentro do contêiner — é um smoke dinâmico adequado para apps não-web. 
+        # Sendo assim, não é um DAST real, mas sim um teste de sanidade da aplicação rodando no contêiner.
 
       - name: Parar contêiner de teste
         if: always()
         run: docker stop app-teste && docker rm app-teste
+
+  # export-traces:
+  #   runs-on: ubuntu-latest
+  #   needs: [build-and-scan, dast-smoke]
+  #   if: always()
+  #   steps:
+  #     - uses: inception-health/otel-export-trace-action@v1
+  #       with:
+  #         otlpEndpoint: grpc://${{ secrets.OTEL_ENDPOINT }}:4317
+  #         otlpHeaders: "Authorization=Bearer ${{ secrets.OTEL_TOKEN }}"
+  #         otelServiceName: calculadora-pipeline
+  #         githubToken: ${{ secrets.GITHUB_TOKEN }}
+  #         runId: ${{ github.run_id }}
+
+  export-traces:
+    runs-on: ubuntu-latest
+    needs: [build-and-scan, dast-smoke]
+    if: always()
+    steps:
+      - name: Simular exportação de trace
+        run: |
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "SHA: ${{ github.sha }}"
+          echo "Trace exportado (modo simulado — configure OTEL_ENDPOINT para backend real)"
